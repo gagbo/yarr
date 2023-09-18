@@ -10,7 +10,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/autometrics-dev/autometrics-go/otel/autometrics"
 	"github.com/nkanaev/yarr/src/assets"
 	"github.com/nkanaev/yarr/src/content/htmlutil"
 	"github.com/nkanaev/yarr/src/content/readability"
@@ -23,6 +25,8 @@ import (
 	"github.com/nkanaev/yarr/src/storage"
 	"github.com/nkanaev/yarr/src/worker"
 )
+
+//go:generate autometrics --otel
 
 func (s *Server) handler() http.Handler {
 	r := router.NewRouter(s.BasePath)
@@ -62,14 +66,82 @@ func (s *Server) handler() http.Handler {
 	return r
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleIndex` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleIndex`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleIndex%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleIndex%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleIndex%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleIndex%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleIndex%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleIndex%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleIndex%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleIndex%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleIndex%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleIndex%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleIndex%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleIndex%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleIndex%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleIndex%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleIndex%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "Root" --latency-target 99 --latency-ms 5
 func (s *Server) handleIndex(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("Root"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	c.HTML(http.StatusOK, assets.Template("index.html"), map[string]interface{}{
 		"settings":      s.db.GetSettings(),
 		"authenticated": s.Username != "" && s.Password != "",
 	})
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleStatic` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleStatic`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleStatic%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleStatic%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleStatic%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleStatic%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleStatic%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleStatic%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleStatic%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleStatic%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleStatic%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleStatic%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleStatic%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleStatic%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleStatic%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleStatic%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleStatic%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "Static" --latency-target 99 --latency-ms 5
 func (s *Server) handleStatic(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("Static"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	// don't serve templates
 	dir, name := filepath.Split(c.Vars["path"])
 	if dir == "" && strings.HasSuffix(name, ".html") {
@@ -79,7 +151,41 @@ func (s *Server) handleStatic(c *router.Context) {
 	http.StripPrefix(s.BasePath+"/static/", http.FileServer(http.FS(assets.FS))).ServeHTTP(c.Out, c.Req)
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleManifest` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleManifest`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleManifest%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleManifest%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleManifest%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleManifest%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleManifest%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleManifest%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleManifest%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleManifest%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleManifest%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleManifest%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleManifest%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleManifest%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleManifest%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleManifest%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleManifest%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "Manifest" --latency-target 99 --latency-ms 5
 func (s *Server) handleManifest(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("Manifest"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"$schema":     "https://json.schemastore.org/web-manifest-combined.json",
 		"name":        "yarr!",
@@ -97,14 +203,82 @@ func (s *Server) handleManifest(c *router.Context) {
 	})
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleStatus` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleStatus`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleStatus%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleStatus%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleStatus%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleStatus%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleStatus%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleStatus%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleStatus%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleStatus%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleStatus%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleStatus%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleStatus%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleStatus%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleStatus%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleStatus%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleStatus%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleStatus(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"running": s.worker.FeedsPending(),
 		"stats":   s.db.FeedStats(),
 	})
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleFolderList` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleFolderList`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleFolderList%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFolderList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleFolderList%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFolderList%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFolderList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleFolderList%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFolderList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFolderList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleFolderList%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleFolderList%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleFolderList%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFolderList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleFolderList%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFolderList%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFolderList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleFolderList(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	if c.Req.Method == "GET" {
 		list := s.db.ListFolders()
 		c.JSON(http.StatusOK, list)
@@ -126,7 +300,41 @@ func (s *Server) handleFolderList(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleFolder` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleFolder`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleFolder%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFolder%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleFolder%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFolder%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFolder%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleFolder%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFolder%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFolder%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleFolder%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleFolder%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleFolder%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFolder%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleFolder%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFolder%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFolder%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleFolder(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	id, err := c.VarInt64("id")
 	if err != nil {
 		c.Out.WriteHeader(http.StatusBadRequest)
@@ -152,7 +360,41 @@ func (s *Server) handleFolder(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleFeedRefresh` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleFeedRefresh`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleFeedRefresh%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedRefresh%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleFeedRefresh%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedRefresh%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedRefresh%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleFeedRefresh%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeedRefresh%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeedRefresh%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleFeedRefresh%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleFeedRefresh%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleFeedRefresh%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedRefresh%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleFeedRefresh%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedRefresh%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedRefresh%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleFeedRefresh(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	if c.Req.Method == "POST" {
 		s.worker.RefreshFeeds()
 		c.Out.WriteHeader(http.StatusOK)
@@ -161,7 +403,41 @@ func (s *Server) handleFeedRefresh(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleFeedErrors` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleFeedErrors`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleFeedErrors%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedErrors%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleFeedErrors%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedErrors%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedErrors%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleFeedErrors%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeedErrors%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeedErrors%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleFeedErrors%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleFeedErrors%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleFeedErrors%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedErrors%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleFeedErrors%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedErrors%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedErrors%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleFeedErrors(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	errors := s.db.GetFeedErrors()
 	c.JSON(http.StatusOK, errors)
 }
@@ -172,7 +448,41 @@ type feedicon struct {
 	etag  string
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleFeedIcon` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleFeedIcon`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleFeedIcon%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedIcon%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleFeedIcon%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedIcon%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedIcon%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleFeedIcon%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeedIcon%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeedIcon%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleFeedIcon%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleFeedIcon%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleFeedIcon%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedIcon%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleFeedIcon%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedIcon%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedIcon%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleFeedIcon(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	id, err := c.VarInt64("id")
 	if err != nil {
 		c.Out.WriteHeader(http.StatusBadRequest)
@@ -217,7 +527,41 @@ func (s *Server) handleFeedIcon(c *router.Context) {
 	c.Out.Write(icon.bytes)
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleFeedList` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleFeedList`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleFeedList%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleFeedList%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedList%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeedList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleFeedList%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeedList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeedList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleFeedList%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleFeedList%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleFeedList%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleFeedList%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedList%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeedList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleFeedList(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	if c.Req.Method == "GET" {
 		list := s.db.ListFeeds()
 		c.JSON(http.StatusOK, list)
@@ -262,7 +606,41 @@ func (s *Server) handleFeedList(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleFeed` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleFeed`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleFeed%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeed%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleFeed%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeed%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleFeed%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleFeed%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeed%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleFeed%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleFeed%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleFeed%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleFeed%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeed%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleFeed%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeed%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleFeed%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleFeed(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	id, err := c.VarInt64("id")
 	if err != nil {
 		c.Out.WriteHeader(http.StatusBadRequest)
@@ -302,7 +680,41 @@ func (s *Server) handleFeed(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleItem` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleItem`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleItem%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleItem%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleItem%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleItem%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleItem%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleItem%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleItem%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleItem%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleItem%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleItem%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleItem%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleItem%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleItem%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleItem%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleItem%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleItem(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	id, err := c.VarInt64("id")
 	if err != nil {
 		c.Out.WriteHeader(http.StatusBadRequest)
@@ -341,7 +753,41 @@ func (s *Server) handleItem(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleItemList` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleItemList`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleItemList%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleItemList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleItemList%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleItemList%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleItemList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleItemList%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleItemList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleItemList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleItemList%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleItemList%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleItemList%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleItemList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleItemList%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleItemList%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleItemList%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleItemList(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	if c.Req.Method == "GET" {
 		perPage := 20
 		query := c.Req.URL.Query()
@@ -391,7 +837,41 @@ func (s *Server) handleItemList(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleSettings` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleSettings`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleSettings%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleSettings%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleSettings%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleSettings%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleSettings%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleSettings%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleSettings%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleSettings%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleSettings%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleSettings%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleSettings%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleSettings%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleSettings%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleSettings%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleSettings%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "API" --latency-target 99 --latency-ms 5
 func (s *Server) handleSettings(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("API"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	if c.Req.Method == "GET" {
 		c.JSON(http.StatusOK, s.db.GetSettings())
 	} else if c.Req.Method == "PUT" {
@@ -411,7 +891,41 @@ func (s *Server) handleSettings(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleOPMLImport` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleOPMLImport`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleOPMLImport%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleOPMLImport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleOPMLImport%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleOPMLImport%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleOPMLImport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleOPMLImport%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleOPMLImport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleOPMLImport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleOPMLImport%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleOPMLImport%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleOPMLImport%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleOPMLImport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleOPMLImport%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleOPMLImport%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleOPMLImport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "OPML" --latency-target 99 --latency-ms 5
 func (s *Server) handleOPMLImport(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("OPML"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	if c.Req.Method == "POST" {
 		file, _, err := c.Req.FormFile("opml")
 		if err != nil {
@@ -443,7 +957,41 @@ func (s *Server) handleOPMLImport(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleOPMLExport` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleOPMLExport`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleOPMLExport%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleOPMLExport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleOPMLExport%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleOPMLExport%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleOPMLExport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleOPMLExport%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleOPMLExport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleOPMLExport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleOPMLExport%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleOPMLExport%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleOPMLExport%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleOPMLExport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleOPMLExport%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleOPMLExport%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleOPMLExport%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc --slo "OPML" --latency-target 99 --latency-ms 5
 func (s *Server) handleOPMLExport(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+		autometrics.WithSloName("OPML"),
+		autometrics.WithAlertLatency(5000000*time.Nanosecond, 99),
+	)), nil) //autometrics:defer
+
 	if c.Req.Method == "GET" {
 		c.Out.Header().Set("Content-Type", "application/xml; charset=utf-8")
 		c.Out.Header().Set("Content-Disposition", `attachment; filename="subscriptions.opml"`)
@@ -485,7 +1033,39 @@ func (s *Server) handleOPMLExport(c *router.Context) {
 	}
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handlePageCrawl` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handlePageCrawl`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handlePageCrawl%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handlePageCrawl%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handlePageCrawl%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handlePageCrawl%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handlePageCrawl%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handlePageCrawl%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handlePageCrawl%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handlePageCrawl%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handlePageCrawl%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handlePageCrawl%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handlePageCrawl%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handlePageCrawl%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handlePageCrawl%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handlePageCrawl%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handlePageCrawl%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:doc
 func (s *Server) handlePageCrawl(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+	)), nil) //autometrics:defer
+
 	url := c.Req.URL.Query().Get("url")
 
 	if newUrl := silo.RedirectURL(url); newUrl != "" {
@@ -517,7 +1097,39 @@ func (s *Server) handlePageCrawl(c *router.Context) {
 	})
 }
 
+//	autometrics:doc-start Generated documentation by Autometrics.
+//
+// # Autometrics
+//
+// # Prometheus
+//
+// View the live metrics for the `handleLogout` function:
+//   - [Request Rate]
+//   - [Error Ratio]
+//   - [Latency (95th and 99th percentiles)]
+//   - [Concurrent Calls]
+//
+// Or, dig into the metrics of *functions called by* `handleLogout`
+//   - [Request Rate Callee]
+//   - [Error Ratio Callee]
+//
+//	autometrics:doc-end Generated documentation by Autometrics.
+//
+// [Request Rate]: http://localhost:9090/graph?g0.expr=%23+Rate+of+calls+to+the+%60handleLogout%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleLogout%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+calls+to+the+%60handleLogout%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleLogout%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bfunction%3D%22handleLogout%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+// [Latency (95th and 99th percentiles)]: http://localhost:9090/graph?g0.expr=%23+95th+and+99th+percentile+latencies+%28in+seconds%29+for+the+%60handleLogout%60+function%0A%0Alabel_replace%28histogram_quantile%280.99%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleLogout%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C+%22percentile_latency%22%2C+%2299%22%2C+%22%22%2C+%22%22%29+or+label_replace%28histogram_quantile%280.95%2C+sum+by+%28le%2C+function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_duration_seconds_bucket%7Bfunction%3D%22handleLogout%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29%2C%22percentile_latency%22%2C+%2295%22%2C+%22%22%2C+%22%22%29&g0.tab=0
+// [Concurrent Calls]: http://localhost:9090/graph?g0.expr=%23+Concurrent+calls+to+the+%60handleLogout%60+function%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28function_calls_concurrent%7Bfunction%3D%22handleLogout%22%7D+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Request Rate Callee]: http://localhost:9090/graph?g0.expr=%23+Rate+of+function+calls+emanating+from+%60handleLogout%60+function+per+second%2C+averaged+over+5+minute+windows%0A%0Asum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleLogout%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29&g0.tab=0
+// [Error Ratio Callee]: http://localhost:9090/graph?g0.expr=%23+Percentage+of+function+emanating+from+%60handleLogout%60+function+that+return+errors%2C+averaged+over+5+minute+windows%0A%0A%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleLogout%22%2Cresult%3D%22error%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29+%2F+%28sum+by+%28function%2C+module%2C+service_name%2C+version%2C+commit%29+%28rate%28function_calls_total%7Bcaller_function%3D%22handleLogout%22%7D%5B5m%5D%29+%2A+on+%28instance%2C+job%29+group_left%28version%2C+commit%29+last_over_time%28build_info%5B1s%5D%29%29%29&g0.tab=0
+//
+//autometrics:inst
 func (s *Server) handleLogout(c *router.Context) {
+	defer autometrics.Instrument(autometrics.PreInstrument(autometrics.NewContext(
+		nil,
+		autometrics.WithConcurrentCalls(true),
+		autometrics.WithCallerName(true),
+	)), nil) //autometrics:defer
+
 	auth.Logout(c.Out, s.BasePath)
 	c.Out.WriteHeader(http.StatusNoContent)
 }

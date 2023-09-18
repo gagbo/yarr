@@ -9,14 +9,19 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/autometrics-dev/autometrics-go/otel/autometrics"
 
 	"github.com/nkanaev/yarr/src/platform"
 	"github.com/nkanaev/yarr/src/server"
 	"github.com/nkanaev/yarr/src/storage"
 )
 
-var Version string = "0.0"
-var GitHash string = "unknown"
+var (
+	Version string = "0.0"
+	GitHash string = "unknown"
+)
 
 var OptList = make([]string, 0)
 
@@ -47,7 +52,7 @@ func parseAuthfile(authfile io.Reader) (username, password string, err error) {
 func main() {
 	platform.FixConsoleIfNeeded()
 
-	var addr, db, authfile, auth, certfile, keyfile, basepath, logfile string
+	var addr, db, authfile, auth, certfile, keyfile, basepath, logfile, otlpCollectorURL string
 	var ver, open bool
 
 	flag.CommandLine.SetOutput(os.Stdout)
@@ -68,6 +73,7 @@ func main() {
 	flag.StringVar(&keyfile, "key-file", opt("YARR_KEYFILE", ""), "`path` to key file for https")
 	flag.StringVar(&db, "db", opt("YARR_DB", ""), "storage file `path`")
 	flag.StringVar(&logfile, "log-file", opt("YARR_LOGFILE", ""), "`path` to log file to use instead of stdout")
+	flag.StringVar(&otlpCollectorURL, "metrics-url", opt("YARR_OTLP_COLLECTOR", ""), "`url` of the OTLP collector to push metrics to")
 	flag.BoolVar(&ver, "version", false, "print application version")
 	flag.BoolVar(&open, "open", false, "open the server in browser")
 	flag.Parse()
@@ -79,7 +85,7 @@ func main() {
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	if logfile != "" {
-		file, err := os.OpenFile(logfile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+		file, err := os.OpenFile(logfile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
 		if err != nil {
 			log.Fatal("Failed to setup log file: ", err)
 		}
@@ -96,7 +102,7 @@ func main() {
 
 	if db == "" {
 		storagePath := filepath.Join(configPath, "yarr")
-		if err := os.MkdirAll(storagePath, 0755); err != nil {
+		if err := os.MkdirAll(storagePath, 0o755); err != nil {
 			log.Fatal("Failed to create app config dir: ", err)
 		}
 		db = filepath.Join(storagePath, "storage.db")
@@ -145,6 +151,26 @@ func main() {
 	if username != "" && password != "" {
 		srv.Username = username
 		srv.Password = password
+	}
+
+	if otlpCollectorURL != "" {
+		_, err := autometrics.Init(
+			"yarr",
+			autometrics.DefBuckets,
+			autometrics.BuildInfo{
+				Version: Version,
+				Commit:  GitHash,
+			},
+			&autometrics.PushConfiguration{
+				CollectorURL: otlpCollectorURL,
+				Period:       1 * time.Second,
+				Timeout:      500 * time.Millisecond,
+				UseHttp:      true,
+			},
+		)
+		if err != nil {
+			log.Fatalf("Failed initialization of autometrics: %s", err)
+		}
 	}
 
 	log.Printf("starting server at %s", srv.GetAddr())
